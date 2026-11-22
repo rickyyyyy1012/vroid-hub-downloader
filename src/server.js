@@ -223,7 +223,7 @@ function resolveDownload(rawName) {
 
 // Resolves once the process is actually launched and rejects when the spawn
 // fails, so the caller can tell the user instead of assuming it worked.
-function launchDetached(command, args) {
+function launchDetached(command, args, options = {}) {
 	return new Promise((resolve, reject) => {
 		let settled = false;
 		let timer = null;
@@ -240,7 +240,7 @@ function launchDetached(command, args) {
 			// No `windowsHide` here: explorer.exe and the other handlers are GUI apps, and
 			// on Windows the flag makes them create their window with SW_HIDE, so the folder
 			// opens invisible and it looks like the button did nothing.
-			child = spawn(command, args, { detached: true, stdio: "ignore" });
+			child = spawn(command, args, { detached: true, stdio: "ignore", ...options });
 		} catch (error) {
 			reject(error);
 			return;
@@ -258,12 +258,21 @@ function launchDetached(command, args) {
 }
 
 function revealPath(fullPath) {
+	if (process.platform === "win32") {
+		// explorer.exe parses its own command line: "/select,<path>" has to arrive as
+		// one verbatim argument with only the path quoted. Node's default quoting
+		// wraps the whole switch as soon as the path has a space, explorer cannot
+		// parse that and silently opens the home folder instead of selecting the file.
+		const target = fullPath.replace(/\//g, "\\");
+		return launchDetached("explorer.exe", [`/select,"${target}"`], {
+			windowsVerbatimArguments: true,
+		});
+	}
+
 	const [command, args] =
-		process.platform === "win32"
-			? ["explorer.exe", [`/select,${fullPath}`]]
-			: process.platform === "darwin"
-				? ["open", ["-R", fullPath]]
-				: ["xdg-open", [path.dirname(fullPath)]];
+		process.platform === "darwin"
+			? ["open", ["-R", fullPath]]
+			: ["xdg-open", [path.dirname(fullPath)]];
 
 	return launchDetached(command, args);
 }
@@ -619,6 +628,10 @@ const server = http.createServer(async (req, res) => {
 				});
 				return;
 			}
+
+			// Shows up in the Activity panel, so a click that does not appear there
+			// means the page is still talking to an older server process.
+			addLog("info", `Reveal -> ${target.fullPath}`);
 
 			sendJson(res, 200, { ok: true });
 			return;
