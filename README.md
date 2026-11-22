@@ -127,9 +127,4 @@ start.bat           Windows launcher
 
 ## Credits
 
-Made with no effort by **ricky** &lt;3
-
-- Discord: [rickyyyyy1020](https://discord.com/users/rickyyyyy1020)
-- GitHub: [rickyyyyy1012](https://github.com/rickyyyyy1012)
-
 Background reading: [Borrowing intellectual property](https://toon.link/blog/1740863435/borrowing-intellectual-property).
