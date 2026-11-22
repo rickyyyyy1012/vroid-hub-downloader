@@ -237,7 +237,10 @@ function launchDetached(command, args) {
 
 		let child;
 		try {
-			child = spawn(command, args, { detached: true, stdio: "ignore", windowsHide: true });
+			// No `windowsHide` here: explorer.exe and the other handlers are GUI apps, and
+			// on Windows the flag makes them create their window with SW_HIDE, so the folder
+			// opens invisible and it looks like the button did nothing.
+			child = spawn(command, args, { detached: true, stdio: "ignore" });
 		} catch (error) {
 			reject(error);
 			return;
