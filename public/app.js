@@ -27,7 +27,6 @@ const els = {
 	resultMeta: document.getElementById("resultMeta"),
 	resultReveal: document.getElementById("resultReveal"),
 	resultCopy: document.getElementById("resultCopy"),
-	resultFolder: document.getElementById("resultFolder"),
 	history: document.getElementById("history"),
 	historyCount: document.getElementById("historyCount"),
 	clearHistory: document.getElementById("clearHistory"),
@@ -1054,10 +1053,6 @@ function startRetry(item) {
 
 els.resultReveal.addEventListener("click", () => {
 	revealFile(els.resultCard.dataset.fileName);
-});
-
-els.resultFolder.addEventListener("click", () => {
-	els.openFolder.click();
 });
 
 els.resultCopy.addEventListener("click", async () => {
