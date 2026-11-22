@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en" data-theme="matrix">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="dark" />
+		<title>VRoid Hub Downloader</title>
+		<link rel="stylesheet" href="/styles.css" />
+		<link
+			rel="icon"
+			href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2322e06b'/%3E%3Cpath d='M12 5l6 3.5v7L12 19l-6-3.5v-7z' fill='none' stroke='%23041007' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E"
+		/>
+		<script>
+			// Set the saved theme before paint so the page never flashes the wrong palette.
+			try {
+				document.documentElement.dataset.theme =
+					localStorage.getItem("vrh.theme") || "matrix";
+			} catch {}
+		</script>
+	</head>
+	<body>
+		<div class="backdrop" aria-hidden="true">
+			<canvas class="rain" id="rain"></canvas>
+			<div class="orb orb-a"></div>
+			<div class="orb orb-b"></div>
+			<div class="grid-lines"></div>
+			<div class="scanlines"></div>
+		</div>
+
+		<div class="shell" id="shell">
+			<header class="topbar">
+				<div class="brand">
+					<div class="mark" aria-hidden="true">
+						<span class="mark-glyph">V</span>
+						<span class="mark-dot"></span>
+					</div>
+					<div class="brand-text">
+						<h1>VRoid Hub Downloader</h1>
+						<p>Deobfuscated VRM models, saved straight to your machine</p>
+					</div>
+				</div>
+
+				<div class="topbar-actions">
+					<div class="clockbox" title="Local time and how long you have been here">
+						<span class="clock-time" id="clock">--:--:--</span>
+						<span class="clock-elapsed">elapsed time <strong id="elapsed">0:00</strong></span>
+					</div>
+
+					<div class="theme-picker" id="themePicker">
+						<button
+							class="theme-trigger"
+							id="themeBtn"
+							type="button"
+							aria-haspopup="listbox"
+							aria-expanded="false"
+							aria-label="Theme"
+						>
+							<span class="tsw" id="themeSwatch" data-swatch="matrix" aria-hidden="true">
+								<i></i><i></i><i></i>
+							</span>
+							<span class="tlabel" id="themeLabel">Matrix</span>
+							<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="m7 10 5 5 5-5" />
+							</svg>
+						</button>
+
+						<div class="theme-menu" id="themeMenu" role="listbox" aria-label="Choose a theme" hidden>
+							<div class="theme-menu-head">Appearance</div>
+							<button class="theme-option" type="button" role="option" data-theme-option="matrix" aria-selected="true">
+								<span class="tsw" data-swatch="matrix" aria-hidden="true"><i></i><i></i><i></i></span>
+								<span class="ttext"><strong>Matrix</strong><small>Terminal green</small></span>
+								<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M5 12.5 9.5 17 19 7.5" />
+								</svg>
+							</button>
+							<button class="theme-option" type="button" role="option" data-theme-option="blue" aria-selected="false">
+								<span class="tsw" data-swatch="blue" aria-hidden="true"><i></i><i></i><i></i></span>
+								<span class="ttext"><strong>Blue</strong><small>Cool slate</small></span>
+								<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M5 12.5 9.5 17 19 7.5" />
+								</svg>
+							</button>
+							<button class="theme-option" type="button" role="option" data-theme-option="amoled" aria-selected="false">
+								<span class="tsw" data-swatch="amoled" aria-hidden="true"><i></i><i></i><i></i></span>
+								<span class="ttext"><strong>AMOLED</strong><small>Pure black</small></span>
+								<svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M5 12.5 9.5 17 19 7.5" />
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<button class="btn btn-ghost" id="openFolder" type="button">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
+							<path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h3.1a2 2 0 0 1 1.5.7l.9 1.1h6.5a2 2 0 0 1 2 2v7.2a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" />
+						</svg>
+						<span>Open downloads</span>
+					</button>
+
+					<button class="btn btn-danger" id="shutdownBtn" type="button" title="Stop the server and close this app">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 4.5V11" />
+							<path d="M7.5 7A7 7 0 1 0 16.5 7" />
+						</svg>
+						<span id="shutdownLabel">Shut down</span>
+					</button>
+				</div>
+			</header>
+
+			<div class="layout">
+				<section class="main-col">
+					<div class="card composer">
+						<div class="composer-head">
+							<label class="eyebrow" for="urlInput">Model link</label>
+							<span class="tag">hub.vroid.com</span>
+						</div>
+
+						<form class="input-row" id="form" autocomplete="off">
+							<div class="field">
+								<svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+									<path d="M10.5 13.5a4.5 4.5 0 0 0 6.4 0l2.1-2.1a4.5 4.5 0 0 0-6.4-6.4l-1 1" />
+									<path d="M13.5 10.5a4.5 4.5 0 0 0-6.4 0l-2.1 2.1a4.5 4.5 0 0 0 6.4 6.4l1-1" />
+								</svg>
+								<input
+									id="urlInput"
+									type="text"
+									spellcheck="false"
+									placeholder="https://hub.vroid.com/en/characters/…/models/…"
+									aria-label="VRoid Hub model link"
+								/>
+							</div>
+
+							<button class="btn btn-primary" id="downloadBtn" type="submit">
+								<span class="spinner" aria-hidden="true"></span>
+								<svg class="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M12 4.5v10.5m0 0 4.2-4.2M12 15l-4.2-4.2" />
+									<path d="M5 19h14" />
+								</svg>
+								<span id="downloadLabel">Download</span>
+							</button>
+						</form>
+
+						<p class="hint" id="hint">
+							Paste a model link from VRoid Hub and it will be decrypted, deobfuscated and saved as a <span class="mono">.vrm</span> file.
+						</p>
+
+						<div class="notice">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<circle cx="12" cy="12" r="8.5" />
+								<path d="M12 8v4.6M12 15.7v.1" />
+							</svg>
+							<p>
+								<strong>Reliability note.</strong> Downloads work by reading the model preview through a Firefox
+								profile that is signed in to <span class="mono">hub.vroid.com</span>, so a signed-in Firefox session
+								is what makes extraction reliable. Without it, the Hub withholds login-gated previews and the run
+								stops with <span class="mono">Failed to grab the encrypted VRM</span>; there is no workaround on this
+								side. If that happens, sign in to <span class="mono">hub.vroid.com</span> in Firefox, then press
+								<em>Re-check</em> in the Session panel and retry.
+							</p>
+						</div>
+					</div>
+
+					<div class="card stat-strip">
+						<div class="stat">
+							<span class="stat-label">Saved models</span>
+							<strong id="statSaved">0</strong>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Total size</span>
+							<strong id="statSize">0 B</strong>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Cache entries</span>
+							<strong id="statCache">0</strong>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Last run</span>
+							<strong id="statLast">—</strong>
+						</div>
+					</div>
+
+					<section class="card result-card" id="resultCard" hidden>
+						<div class="result-thumb" aria-hidden="true">
+							<span id="resultInitial">V</span>
+						</div>
+						<div class="result-body">
+							<span class="eyebrow">Latest download</span>
+							<h3 id="resultName">—</h3>
+							<p class="result-meta" id="resultMeta"></p>
+							<div class="result-actions">
+								<button class="btn-mini" id="resultReveal" type="button">Reveal file</button>
+								<button class="btn-mini" id="resultCopy" type="button">Copy path</button>
+								<button class="btn-mini" id="resultFolder" type="button">Open folder</button>
+							</div>
+						</div>
+					</section>
+
+					<div class="card console-card">
+						<div class="progress" id="progress" hidden><span></span></div>
+
+						<div class="card-head">
+							<div class="head-left">
+								<span class="live-dot" id="liveDot" title="Live log stream"></span>
+								<h2>Activity</h2>
+							</div>
+							<div class="head-right">
+								<span class="status-pill" id="statusPill">Idle</span>
+								<button class="btn-mini" id="clearLogs" type="button">Clear</button>
+							</div>
+						</div>
+
+						<div class="console" id="console" role="log" aria-live="polite">
+							<div class="empty">
+								<p class="empty-title">Nothing running</p>
+								<p class="empty-sub">Logs stream here while a model is being fetched and deobfuscated.</p>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<aside class="side-col">
+					<section class="card side-card">
+						<div class="card-head">
+							<div class="head-left">
+								<h2>Session</h2>
+							</div>
+							<button class="btn-mini" id="recheckSession" type="button" title="Scan the Firefox cookie store again">
+								Re-check
+							</button>
+						</div>
+						<div class="session-body">
+							<div class="session-state">
+								<span class="session-dot" id="sessionDot"></span>
+								<div class="session-text">
+									<strong id="sessionState">Checking…</strong>
+									<span id="sessionDetail">Reading the Firefox cookie store</span>
+								</div>
+							</div>
+							<p class="session-note">
+								Without a session, login-gated previews return 404 and the run fails.
+							</p>
+						</div>
+					</section>
+
+					<section class="card side-card library-card">
+						<div class="card-head">
+							<div class="head-left">
+								<h2>Downloads</h2>
+							</div>
+							<div class="head-right">
+								<span class="count" id="downloadsCount">0</span>
+								<button class="btn-mini" id="refreshLibrary" type="button" title="Rescan the downloads folder">
+									Refresh
+								</button>
+							</div>
+						</div>
+						<div class="downloads" id="downloads"></div>
+					</section>
+
+					<section class="card side-card history-card">
+						<div class="card-head">
+							<div class="head-left">
+								<h2>History</h2>
+							</div>
+							<div class="head-right">
+								<span class="count" id="historyCount">0</span>
+								<button class="btn-mini" id="clearHistory" type="button" title="Remove every entry from the history list">
+									Clear
+								</button>
+							</div>
+						</div>
+						<div class="history" id="history"></div>
+					</section>
+				</aside>
+			</div>
+		</div>
+
+		<footer class="corner-credit">
+			<span class="credit-line">made with no effort by <strong>ricky</strong> <span class="heart">&lt;3</span></span>
+			<span class="credit-links">
+				<button class="credit-btn" id="discordCopy" type="button" title="Copy the Discord username to your clipboard">
+					<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+						<path d="M20.32 4.37a19.79 19.79 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.61 1.25a18.27 18.27 0 0 0-5.49 0c-.16-.39-.4-.87-.62-1.25a.08.08 0 0 0-.08-.04 19.74 19.74 0 0 0-4.88 1.52.07.07 0 0 0-.04.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 5.99 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 0 0-.04-.11 13.1 13.1 0 0 1-1.88-.9.08.08 0 0 1 0-.12c.13-.1.25-.2.37-.3a.07.07 0 0 1 .08 0 14.2 14.2 0 0 0 12.06 0 .07.07 0 0 1 .08 0c.12.1.25.2.37.3a.08.08 0 0 1 0 .12 12.3 12.3 0 0 1-1.87.9.08.08 0 0 0-.04.1c.36.7.77 1.37 1.22 2a.08.08 0 0 0 .09.03 19.84 19.84 0 0 0 6-3.03.08.08 0 0 0 .03-.06c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42z" />
+					</svg>
+					<span id="discordTag">rickyyyyy1020</span>
+				</button>
+				<a href="https://github.com/rickyyyyy1012" target="_blank" rel="noreferrer noopener" title="GitHub: rickyyyyy1012">
+					<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+						<path d="M12 2.2a9.8 9.8 0 0 0-3.1 19.1c.5.1.7-.2.7-.5v-1.9c-2.7.6-3.3-1.3-3.3-1.3-.4-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.2-4.5-1.1-4.5-4.9 0-1.1.4-2 1-2.7-.1-.2-.4-1.2.1-2.6 0 0 .8-.2 2.7 1a9.3 9.3 0 0 1 5 0c1.9-1.2 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.6.6.7 1 1.6 1 2.7 0 3.8-2.3 4.7-4.5 4.9.4.3.7.9.7 1.9v2.9c0 .3.2.6.7.5A9.8 9.8 0 0 0 12 2.2z" />
+					</svg>
+					rickyyyyy1012
+				</a>
+			</span>
+		</footer>
+
+		<div class="bye" id="bye" hidden>
+			<div class="bye-card">
+				<div class="bye-mark" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M12 4.5V11" />
+						<path d="M7.5 7A7 7 0 1 0 16.5 7" />
+					</svg>
+				</div>
+				<h2>Session ended</h2>
+				<p>The server has stopped and any running download was cancelled. It is safe to close this tab.</p>
+				<button class="btn btn-ghost" id="closeTab" type="button">Close this tab</button>
+			</div>
+		</div>
+
+		<script src="/app.js" type="module"></script>
+	</body>
+</html>

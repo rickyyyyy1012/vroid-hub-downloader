@@ -1,0 +1,4 @@
+# normalise line endings across platforms
+* text=auto eol=lf
+*.bat text eol=crlf
+*.wasm binary

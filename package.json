@@ -1,0 +1,25 @@
+{
+	"name": "vrh-deobfuscator",
+	"version": "2.0.0",
+	"private": true,
+	"description": "Download VRoid Hub models, decrypt them and deobfuscate them back into a usable VRM file, with a local web UI.",
+	"type": "module",
+	"engines": {
+		"node": ">=23.8.0"
+	},
+	"dependencies": {
+		"@babylonjs/ktx2decoder": "^7.49.0",
+		"@gltf-transform/core": "^4.1.1",
+		"@gltf-transform/extensions": "^4.1.1",
+		"@gltf-transform/functions": "^4.1.1",
+		"sharp": "^0.33.5",
+		"undici": "^7.22.0",
+		"webcrack-unpacker": "^1.0.2"
+	},
+	"scripts": {
+		"start": "node ./src/server.js",
+		"start:open": "node ./src/server.js --open",
+		"ui": "node ./src/server.js --open",
+		"cli": "node ./src/index.js"
+	}
+}
